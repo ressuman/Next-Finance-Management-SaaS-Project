@@ -3,23 +3,25 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { handle } from "hono/vercel";
+import authors from "./authors";
+import books from "./books";
 
 export const runtime = "edge";
 
 const app = new Hono().basePath("/api");
 
-const schema = z.object({
-  test: z.string(),
-});
+// const schema = z.object({
+//   test: z.string(),
+// });
 
-const schema1 = z.object({
-  test: z.string(),
-  age: z.number(),
-});
+// const schema1 = z.object({
+//   test: z.string(),
+//   age: z.number(),
+// });
 
-const schema2 = z.object({
-  postId: z.number(),
-});
+// const schema2 = z.object({
+//   postId: z.number(),
+// });
 
 // app
 //   .get("/hello", (c) => {
@@ -66,6 +68,9 @@ app.get("/hello", clerkMiddleware(), (c) => {
     userId: auth.userId,
   });
 });
+
+app.route("/authors", authors);
+app.route("/books", books);
 
 export const GET = handle(app);
 export const POST = handle(app);
