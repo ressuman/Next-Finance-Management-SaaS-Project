@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-
+import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { handle } from "hono/vercel";
 
 export const runtime = "edge";
@@ -17,29 +17,55 @@ const schema1 = z.object({
   age: z.number(),
 });
 
-app
-  .get("/hello", (c) => {
-    return c.json({
-      message: "Hello Next.js!",
-    });
-  })
-  .get("hello/:test", zValidator("param", schema), (c) => {
-    const { test } = c.req.valid("param");
+const schema2 = z.object({
+  postId: z.number(),
+});
 
+// app
+//   .get("/hello", (c) => {
+//     return c.json({
+//       message: "Hello Next.js!",
+//     });
+//   })
+//   .get("hello/:test", zValidator("param", schema), (c) => {
+//     const { test } = c.req.valid("param");
+
+//     return c.json({
+//       message: "Hello Next.js! am back",
+//       test,
+//     });
+//   })
+//   .post(
+//     "/create/:postId",
+//     zValidator("json", schema1),
+//     zValidator("param", schema2),
+//     (c) => {
+//       const { test, age } = c.req.valid("json");
+//       const { postId } = c.req.valid("param");
+//       return c.json({});
+//       //   if (!result.success) {
+//       //     return c.text("Invalid!", 400);
+//       //   }
+//       // })
+//       //...
+//     }
+//   );
+
+app.get("/hello", clerkMiddleware(), (c) => {
+  const auth = getAuth(c);
+
+  if (!auth?.userId) {
     return c.json({
-      message: "Hello Next.js! am back",
-      test,
+      message: "You are not logged in.",
+      error: "Unauthorized",
     });
-  })
-  .post("/hi", zValidator("json", schema1), (c) => {
-    const { test, age } = c.req.valid("json");
-    return c.json({});
-    //   if (!result.success) {
-    //     return c.text("Invalid!", 400);
-    //   }
-    // })
-    //...
+  }
+
+  return c.json({
+    message: "You are logged in!",
+    userId: auth.userId,
   });
+});
 
 export const GET = handle(app);
 export const POST = handle(app);
